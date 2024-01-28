@@ -40,102 +40,161 @@ function toPairs(inputArray) {
 }
 
 function numberDisplay(n, radix) {
-    const prefix = 
+    const prefix =
         radix === 10
             ? ""
-            : radix === 16 
-                ? "0x" 
+            : radix === 16
+                ? "0x"
                 : radix === 2
                     ? "0b"
                     : "0?"
     return prefix + n.toString(radix)
 }
 
+function digitsDifference([a, b], radix) {
+    // We assume that the inputs are in the range 0 to 9
+
+    maxDigit = radix - 1
+
+    // We want the difference 0 and maxDigit to be as if the 0
+    // was 10 in the given radix.
+    switch (a) {
+        case 0:
+            switch (b) {
+                case maxDigit:
+                    return radix - maxDigit
+                default:
+                    // fallthrough
+            }
+        break;
+        case maxDigit:
+            switch (b) {
+                case 0:
+                    return maxDigit - radix
+                default:
+                    // fallthrough
+            }
+        break;
+        default:
+            // fallthrough
+        break;
+    }
+
+    return a - b
+}
+
+const somePrimes = [2, 3, 5, 7, 11, 13, 17]
+
+// if x is of the form x = b^n returns b, otherwise 0
+function isNthPower(x, n) {
+    for (var i = 1; Math.pow(i, n) <= x; i += 1) {
+        if (Math.pow(i, n) == x) {
+            return i
+        }
+    }
+    return 0
+}
+
 function isNiceNumber(n) {
     if (!Number.isInteger(n)) {
         return {isNice: false, message: "Not even an integer"}
     }
-    
+
     for (radix of [10, 16, 2]) {
         const s = n.toString(radix)
-    
+
+        for (prime of somePrimes) {
+            const base = isNthPower(n, prime)
+            if (base) {
+                return {isNice: true, numberText: numberDisplay(s, radix), message: "is " + base +  "^" + prime}
+            }
+        }
+
         if (radix !== 2 && isPalindrome(s)) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "palindrome"}
         }
-        
+
         const digits = s.split("").map(x => parseInt(x, radix))
-        
+
         if (
             radix !== 2
             && digits.every(digit => digit === 0 || digit === 1)
         ) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "looks like binary"}
         }
-        
+
         if (digits.length > 2) {
+            if (
+                radix !== 2
+                && digits[digits.length - 1] === 0
+                && digits[digits.length - 2] === 0
+            ) {
+                return {isNice: true, numberText: numberDisplay(s, radix), message: "round"}
+            }
+
             let multiples = []
             for (let i = 2; i <= radix; i += 1) {
                 // These could be just the primes, but  we get the right
-                // answer becasue we go lowest to highest, and the 
+                // answer becasue we go lowest to highest, and the
                 // redundant checks are currently fast enough we haven't
                 // noticed an issue
                 multiples.push(i);
             }
-            
+
             for (multiple of multiples) {
                 let allInProductOrder = true
-                
+
                 for ([digitA, digitB] of toPairs(digits)) {
                     if (digitA * multiple !== digitB) {
                         allInProductOrder = false
                         break
                     }
                 }
-                
+
                 if (allInProductOrder) {
                     return {isNice: true, numberText: numberDisplay(s, radix), message: "all in product order"}
                 }
-                
+
                 let reversed = [...digits].reverse()
-                
+
                 allInProductOrder = true
-                
+
                 for ([digitA, digitB] of toPairs(reversed)) {
                     if (digitA * multiple !== digitB) {
                         allInProductOrder = false
                         break
                     }
                 }
-                
+
                 if (allInProductOrder) {
                     return {isNice: true, numberText: numberDisplay(s, radix), message: "all in product order (reversed)"}
                 }
             }
-            
-            
         }
-        
+
         const differences =
             toPairs(digits)
-                .map(([a, b]) => a - b)
+                .map((pair) => {
+                    return digitsDifference(pair, radix)
+                })
 
         const hasEvenlySpacedDigits =
             toPairs(differences)
                 .every(([a, b]) => a === b)
-        
+
         if (differences.length > 1 && hasEvenlySpacedDigits) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "evenly spaced digits"}
         }
-        
+
         if (s.match(/69/) !== null) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "funny sex number"}
         }
-        
+
         if (s.match(/42/) !== null) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "the answer"}
         }
     }
-    
+
     return {isNice: false, numberText: "", message: ""}
 }
 
@@ -143,9 +202,9 @@ function onSubmit(event){
     event.preventDefault()
 
     const startNumber = parseInt(numberInput.value);
-    
+
     listParent.textContent = ""
-    
+
     const isANumber = !isNaN(startNumber)
     if (isANumber) {
         errorOutput.innerText = ""
@@ -154,16 +213,16 @@ function onSubmit(event){
     }
 
     const count = 10
-    
+
     let entries = []
-    
+
     let currentNumber = startNumber + 1
     let i = 0
-    // Number.MAX_SAFE_INTEGER is 9007199254740991, which has been 
+    // Number.MAX_SAFE_INTEGER is 9007199254740991, which has been
     // manually verified to not be nice
     while (entries.length < count && currentNumber < Number.MAX_SAFE_INTEGER) {
         const {isNice, numberText, message} = isNiceNumber(currentNumber)
-        
+
         if (isNice) {
             entries.push({n: currentNumber, numberText, message})
         }
