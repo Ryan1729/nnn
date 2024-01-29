@@ -39,7 +39,7 @@ function toPairs(inputArray) {
   )
 }
 
-function numberDisplay(n, radix) {
+function numberDisplay(n, radix = 10) {
     const prefix =
         radix === 10
             ? ""
@@ -83,7 +83,11 @@ function digitsDifference([a, b], radix) {
     return a - b
 }
 
-const somePrimes = [2, 3, 5, 7, 11, 13, 17]
+const RADICES = [10, 16, 2]
+const SOME_PRIMES = [2, 3, 5, 7, 11, 13, 17]
+
+// Some code relies on the max radix in RADICES being smaller than the
+// largest prime in SOME_PRIMES to cover every case.
 
 // if x is of the form x = b^n returns b, otherwise 0
 function isNthPower(x, n) {
@@ -95,22 +99,44 @@ function isNthPower(x, n) {
     return 0
 }
 
+
+
 function isNiceNumber(n) {
     if (!Number.isInteger(n)) {
         return {isNice: false, message: "Not even an integer"}
     }
 
-    for (radix of [10, 16, 2]) {
+    // Mathematical things {
+    if (n === 0) {
+        return {isNice: true, numberText: numberDisplay(String(n)), message: "0 is the first number, and also extremely round."}
+    }
+
+    for (prime of SOME_PRIMES) {
+        const base = isNthPower(n, prime)
+        if (base) {
+            let displayRadix = 10
+            for (radix of RADICES) {
+                if (base === radix) {
+                    displayRadix = radix
+                    break
+                }
+            }
+
+            return {isNice: true, numberText: numberDisplay(n.toString(displayRadix), displayRadix), message: "is " + base +  "^" + prime}
+        }
+    }
+
+    if (n % 90 == 0) {
+        return {isNice: true, numberText: numberDisplay(String(n)), message: "An integer number of quarter turns in degrees"}
+    }
+
+    // }
+
+    // Radix based things {
+    for (radix of RADICES) {
         const s = n.toString(radix)
 
-        for (prime of somePrimes) {
-            const base = isNthPower(n, prime)
-            if (base) {
-                return {isNice: true, numberText: numberDisplay(s, radix), message: "is " + base +  "^" + prime}
-            }
-        }
-
-        if (radix !== 2 && isPalindrome(s)) {
+        if (radix !== 2 && s.length > 1 && isPalindrome(s)) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "palindrome"}
         }
 
@@ -133,12 +159,11 @@ function isNiceNumber(n) {
             }
 
             let multiples = []
-            for (let i = 2; i <= radix; i += 1) {
-                // These could be just the primes, but  we get the right
-                // answer becasue we go lowest to highest, and the
-                // redundant checks are currently fast enough we haven't
-                // noticed an issue
-                multiples.push(i);
+            for (prime of SOME_PRIMES) {
+                // We assume tht the largest prime we check here is
+                // larger than the largest radix we might use
+                if (prime > radix) { break }
+                multiples.push(prime);
             }
 
             for (multiple of multiples) {
@@ -194,6 +219,7 @@ function isNiceNumber(n) {
             return {isNice: true, numberText: numberDisplay(s, radix), message: "the answer"}
         }
     }
+    // }
 
     return {isNice: false, numberText: "", message: ""}
 }
