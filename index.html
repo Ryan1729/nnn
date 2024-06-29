@@ -32,11 +32,25 @@ function isPalindrome(s) {
     return  s.split("").reverse().join("") === s
 }
 
+// [1,2,3] => [[1,2], [2, 3]]
 function toPairs(inputArray) {
   return Array.from(
     {length: inputArray.length - 1},
     (_, index) => inputArray.slice(index, index+2)
   )
+}
+
+// [1,2,3,4], 2 => [[1,2], [3, 4]]
+// returns an empty array if the chunk size doesn't split up the input exactly
+function toChunks(inputArray, chunkSize) {
+    let output = []
+    if (inputArray.length % chunkSize !== 0) {
+        return output
+    }
+    for (let i = 0; i < inputArray.length; i += chunkSize) {
+        output.push(inputArray.slice(i, i + chunkSize))
+    }
+    return output
 }
 
 function numberDisplay(n, radix = 10) {
@@ -228,7 +242,6 @@ function nicenessReasons(n) {
             }
         }
 
-
         const differences =
             toPairs(digits)
                 .map((pair) => {
@@ -241,6 +254,30 @@ function nicenessReasons(n) {
 
         if (differences.length > 1 && hasEvenlySpacedDigits) {
             output.push({numberText: numberDisplay(s, radix), message: "evenly spaced digits"})
+        }
+        // Are there repeating patterns like 1212
+        for (let chunkSize = 1; chunkSize <= Math.floor(digits.length / 2); chunkSize += 1) {
+            const chunks = toChunks(digits, chunkSize)
+
+            if (chunks.length <= 1) {
+                continue
+            }
+
+            const allChunksMatch =
+                toPairs(chunks)
+                    .every(([a, b]) => {
+                        // We rely on a and b being the same length
+                        for (let i = 0; i < a.length; i += 1) {
+                            if (a[i] !== b[i]) {
+                                return false
+                            }
+                        }
+                        return true
+                    });
+
+            if (allChunksMatch) {
+                output.push({numberText: numberDisplay(s, radix), message: "repeating pattern of length " + chunkSize})
+            }
         }
 
         if (s.match(/1729/) !== null) {
