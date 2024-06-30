@@ -133,6 +133,27 @@ function containsHexWord(word) {
     return ""
 }
 
+const E_ENTRIES = [
+    ["4de", "\"4de\" sounds like 40 if you read it 4-de"],
+    ["4dee", "\"4dee\" sounds like 40 if you read it 4-dee"],
+    ["4te", "\"4te\" sounds like 40 if you read it 4-te"],
+    ["4tee", "\"4tee\" sounds like 40 if you read it 4-tee"],
+    ["6de", "\"6de\" sounds like 60 if you read it 6-de"],
+    ["6dee", "\"6dee\" sounds like 60 if you read it 6-dee"],
+    ["6te", "\"6te\" sounds like 60 if you read it 6-te"],
+    ["6tee", "\"6tee\" sounds like 60 if you read it 6-tee"],
+    ["7de", "\"7de\" sounds like 70 if you read it 7-de"],
+    ["7dee", "\"7dee\" sounds like 70 if you read it 7-dee"],
+    ["7te", "\"7te\" sounds like 70 if you read it 7-te"],
+    ["7tee", "\"7tee\" sounds like 70 if you read it 7-tee"],
+    ["8e", "\"8e\" sounds like 80 if you read it 8-e"],
+    ["8ee", "\"8ee\" sounds like 80 if you read it 8-ee"],
+    ["9de", "\"9de\" sounds like 90 if you read it 9-de"],
+    ["9dee", "\"9dee\" sounds like 90 if you read it 9-dee"],
+    ["9te", "\"9te\" sounds like 90 if you read it 9-te"],
+    ["9tee", "\"9tee\" sounds like 90 if you read it 9-tee"],
+];
+
 function nicenessReasons(n) {
     let output = []
 
@@ -239,6 +260,16 @@ function nicenessReasons(n) {
             const word = containsHexWord(s)
             if (word) {
                 output.push({numberText: numberDisplay(s, radix), message: "contains a part that looks like a word: " + word})
+            }
+        }
+
+        // large enough to have an 'e'
+        if (radix >= 15) {
+            for ([substring, message] of E_ENTRIES) {
+                if (s.includes(substring)) {
+                    output.push({numberText: numberDisplay(s, radix), message})
+                    break
+                }
             }
         }
 
