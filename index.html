@@ -307,7 +307,7 @@ function nicenessReasons(n) {
                     });
 
             if (allChunksMatch) {
-                output.push({numberText: numberDisplay(s, radix), message: "repeating pattern of length " + chunkSize})
+                output.push({numberText: numberDisplay(s, radix), message: "repeating pattern of length " + chunkSize + " (\"" + chunks[0].slice(0, chunkSize).map(d => d.toString(radix)).join('') + "\" in base " + radix + ")"})
             }
         }
 
