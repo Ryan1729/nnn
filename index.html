@@ -155,6 +155,65 @@ const E_ENTRIES = [
     ["9tee", "\"9tee\" sounds like 90 if you read it 9-tee"],
 ];
 
+// Based on https://en.wikipedia.org/wiki/Wheel_factorization
+const primes = [2, 3, 5]
+const nextPrime = 7
+
+const inc = [4, 2, 4, 2, 4, 6, 2, 6]
+
+const div = (n, k) => n % k == 0
+
+const calculateFactors = (n) => {
+    if (!(n > 1)) {
+        // NaN goes here
+        return [n]
+    }
+    let output = []
+
+    for (prime of primes) {
+        while (div(n, prime)) {
+            output.push(prime)
+            n /= prime
+        }
+    }
+    let k = nextPrime
+    let i = 0
+    while (k * k <= n) {
+        if (div(n, k)) {
+            output.push(k)
+            n /= k
+        } else {
+            k += inc[i]
+            i += 1
+            if (i >= inc.length) {
+                i = 0
+            }
+        }
+    }
+    if (n > 1) {
+        output.push(n)
+    }
+
+    return output
+}
+
+function toSentence(array) {
+    const secondLastIndex = array.length - 2;
+
+    let output = "";
+    let sep = "";
+    for (let i = 0; i < array.length; i += 1 ) {
+        output += sep;
+        output += array[i];
+        sep = ", "
+        if (i === secondLastIndex) {
+            sep = ", and "
+        }
+    }
+
+    return output
+}
+
 function nicenessReasons(n) {
     let output = []
 
@@ -254,6 +313,19 @@ function nicenessReasons(n) {
                 if (allInProductOrder) {
                     output.push({numberText: numberDisplay(s, radix), message: "all in product order (reversed)"})
                 }
+            }
+        }
+
+        // Is it a spottable multiple of 37 according to the condition given in https://blog.plover.com/math/multiple-of-37.html
+        // TODO Can this be generalized further? Like to other equations? Does it stay as mildly interesting with other equations?
+        if (digits.length === 4 && digits[1] === digits[2]) {
+            const a = digits[0]
+            const b = digits[1]
+            const c = digits[3]
+
+            if (a + c === b) {
+                const factors = calculateFactors(parseInt("111", radix));
+                output.push({numberText: numberDisplay(s, radix), message: "Is spottable as having the factors " + toSentence(factors) + " because it has the form abbc where a + c = b"})
             }
         }
 
