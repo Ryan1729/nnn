@@ -214,6 +214,10 @@ function toSentence(array) {
     return output
 }
 
+const regexpEmojiPresentation = /\p{Emoji_Presentation}/gu;
+
+const hasEmoij = (s) => s.match(regexpEmojiPresentation) != null;
+
 function nicenessReasons(n) {
     let output = []
 
@@ -397,6 +401,15 @@ function nicenessReasons(n) {
         }
     }
     // }
+
+    const codepointString = String.fromCodePoint(n);
+    // TODO more interesting unicode categories
+    //    ASCII
+    //    Combining characters
+    //    Control pictures
+    if (hasEmoij(codepointString)) {
+        output.push({numberText: "U+" + n.toString(16), message: "When interpreted as a unicode codepoint, contains emoji: \""+ codepointString + "\""})
+    }
 
     return output
 }
