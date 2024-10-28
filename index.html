@@ -10,6 +10,9 @@ body{
     color:#eee;
     background-color:#222;
 }
+.underline {
+    text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -28,9 +31,41 @@ const numberInput = document.getElementById("the-input")
 const errorOutput = document.getElementById("error-output")
 const listParent = document.getElementById("the-list")
 
+const reverseString = (s) => {
+    return s.split("").reverse().join("");
+}
+
 function isPalindrome(s) {
     s = s.trim().toLowerCase().replaceAll(/[\W]+/g, "")
-    return  s.split("").reverse().join("") === s
+    return reverseString(s) === s;
+}
+
+const pseudoPalindromeParts = (s) => {
+    s = s.trim().toLowerCase().replaceAll(/[\W]+/g, "")
+
+    let left;
+    let middle;
+    let right;
+    if (s.length % 2 === 0) {
+        const at = s.length / 2;
+        left = s.substring(0, at);
+        middle = "";
+        right = s.substring(at);
+    } else {
+        const leftAt = Math.floor(s.length / 2);
+        const rightAt = Math.ceil(s.length / 2);
+        left = s.substring(0, leftAt);
+        middle = s.substring(leftAt, rightAt);
+        right = s.substring(rightAt);
+    }
+
+    const flippedRightS = left + middle + reverseString(right);
+
+    if (isPalindrome(flippedRightS)) {
+        return [left, middle, right];
+    } else {
+        return [];
+    }
 }
 
 // [1,2,3] => [[1,2], [2, 3]]
@@ -259,8 +294,22 @@ function nicenessReasons(n) {
     for (radix of RADICES) {
         const s = n.toString(radix)
 
-        if (radix !== 2 && s.length > 1 && isPalindrome(s)) {
-            output.push({numberText: numberDisplay(s, radix), message: "palindrome"})
+        if (radix !== 2 && s.length > 1) {
+            if (isPalindrome(s)) {
+                output.push({numberText: numberDisplay(s, radix), message: "palindrome"})
+            } else  {
+                const parts = pseudoPalindromeParts(s);
+                if (parts.length > 0) {
+                    let partsMessage = "pseudo-palindrome: ";
+                    for (part of parts) {
+                        partsMessage += " <span class=\"underline\">";
+                        partsMessage += part
+                        partsMessage += "</span>";
+                    }
+
+                    output.push({numberText: numberDisplay(s, radix), message: partsMessage})
+                }
+            }
         }
 
         const digits = s.split("").map(x => parseInt(x, radix))
@@ -471,13 +520,13 @@ function onSubmit(event){
             const ul = document.createElement("ul")
             for (message of messages) {
                 const li = document.createElement("li")
-                li.textContent = message
+                li.innerHTML = message
                 ul.appendChild(li)
             }
             p.appendChild(ul)
         } else {
             const {numberText, message} = reasons[0]
-            p.textContent = (String(n) !== numberText ? (n + " (" + numberText + ")"): n) + ": " + message
+            p.innerHTML = (String(n) !== numberText ? (n + " (" + numberText + ")"): n) + ": " + message
         }
 
         listParent.appendChild(p)
