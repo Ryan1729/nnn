@@ -318,6 +318,52 @@ function nicenessReasons(n) {
             output.push({numberText: numberDisplay(s, radix), message: "looks like binary"})
         }
 
+        if (digits.length > 1) {
+            let isSymmetrical = true
+            const lengthOfFirstHalfExcludingMiddleElement = Math.floor(digits.length)
+            for (let i = 0; i < lengthOfFirstHalfExcludingMiddleElement; i += 1) {
+                let earlyDigit = digits[i];
+                let lateDigit = digits[(digits.length - 1) - i];
+
+                if (
+                    earlyDigit == '8'
+                    && lateDigit == '8'
+                ) {
+                    continue
+                }
+
+                if (
+                    earlyDigit == '0'
+                    && lateDigit == '0'
+                ) {
+                    continue
+                }
+
+                if (
+                    earlyDigit == '6'
+                    && lateDigit == '9'
+                ) {
+                    continue
+                }
+
+                if (
+                    earlyDigit == '9'
+                    && lateDigit == '6'
+                ) {
+                    continue
+                }
+
+                isSymmetrical = false;
+                break
+            }
+
+            if (
+                isSymmetrical
+            ) {
+                output.push({numberText: numberDisplay(s, radix), message: "visually symmetrical"})
+            }
+        }
+
         if (digits.length > 2) {
             if (
                 radix !== 2
