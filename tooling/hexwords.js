@@ -32,7 +32,8 @@ async function processLineByLine() {
     },
     {
       id: "a to 4",
-      replacement: [/a/gi, "4"]
+      replacement: [/a/gi, "4"],
+      skippable: true,
     },
     {
       id: "et to 37",
@@ -40,7 +41,8 @@ async function processLineByLine() {
     },
     {
       id: "e to 3",
-      replacement: [/e/gi, "3"]
+      replacement: [/e/gi, "3"],
+      skippable: true,
     },
     {
       id: "o to 0",
@@ -80,40 +82,73 @@ async function processLineByLine() {
 
   for await (const line of rl) {
     const chars = line.split("");
+    const lowerLine = line.toLowerCase();
     if (
       // Length 2 ones like "is" -> "15" aren't interesting enough
       line.length <= 2
       // Skip acronyms
-      || chars.every(c => CAPS.includes(c))
+      || (
+        chars.every(c => CAPS.includes(c))
+        // The initial dataset had "DAD" but not "dad".
+        // A good heuristic would be "does the word with an -s, -ed,
+        // -er, or -ing ending exist in the data set" but that would
+        // require pulling the dataset into memory all at once and
+        // iterating it multiple times. This is a worse heurististic,
+        // but it does have the advantage of being calculatable from
+        // just the line itself, and it does work for the known example.
+        && lowerLine.split("").reverse().join("") !== lowerLine
+      )
       // Skip all number "words"
       || chars.every(c => NUMBERS.includes(c))
     ) {
       continue
     }
-    
-    let current = line;
-    
+
+    let currents = [lowerLine];
+
     let usedReplacements = [];
-    
+
     for (replacement of replacements) {
       const [from, to] = replacement.replacement;
-      const replaced = current.replaceAll(from, to);
 
-      if (current != replaced) {
-        current = replaced;
-        usedReplacements.push(replacement);
+      const length = currents.length;
+      for (let i = 0; i < length; i += 1) {
+          const current = currents[i];
+          if (replacement.skippable) {
+            // We expect this to go to the end of currents and not be iterated over.
+            currents.push(current);
+          }
+
+          const replaced = current.replaceAll(from, to);
+          if (current != replaced) {
+            currents[i] = replaced;
+            usedReplacements.push(replacement);
+          }
       }
     }
-    
-    if (isAllHex(current)) {
-      hexWords[current] = {
-        original: line.toLowerCase(),
-        usedReplacements: usedReplacements.map(r => r.id),
-      };
+
+    for (current of currents) {
+        if (isAllHex(current)) {
+          hexWords[current] = {
+            original: lowerLine,
+            usedReplacements: usedReplacements.map(r => r.id),
+          };
+        }
     }
   }
-  
+
   console.log(JSON.stringify(hexWords))
+
+  const assertExists = (key) => {
+    if (!hexWords[key]) {
+      console.error("\"" + key + "\" was missing")
+    }
+  }
+
+  assertExists("d4d4");
+  assertExists("dada");
+  assertExists("d4d");
+  assertExists("dad");
 }
 
-processLineByLine(); 
+processLineByLine();
