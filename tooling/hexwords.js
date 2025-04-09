@@ -106,32 +106,42 @@ async function processLineByLine() {
 
     let currents = [lowerLine];
 
-    let usedReplacements = [];
+    let usedReplacementsByIndex = {};
+
+    if (line == 'toadied') {
+        debugger
+    }
 
     for (replacement of replacements) {
       const [from, to] = replacement.replacement;
 
       const length = currents.length;
       for (let i = 0; i < length; i += 1) {
-          const current = currents[i];
+        const current = currents[i];
+
+        const replaced = current.replaceAll(from, to);
+        if (current != replaced) {
+          // Skipping doesn't matter if applying it wouldn't do anything
           if (replacement.skippable) {
             // We expect this to go to the end of currents and not be iterated over.
             currents.push(current);
           }
 
-          const replaced = current.replaceAll(from, to);
-          if (current != replaced) {
-            currents[i] = replaced;
-            usedReplacements.push(replacement);
+          currents[i] = replaced;
+          if (!usedReplacementsByIndex[i]) {
+            usedReplacementsByIndex[i] = []
           }
+          usedReplacementsByIndex[i].push(replacement);
+        }
       }
     }
 
-    for (current of currents) {
+    for (let i = 0; i < currents.length; i += 1) {
+        const current = currents[i];
         if (isAllHex(current)) {
           hexWords[current] = {
             original: lowerLine,
-            usedReplacements: usedReplacements.map(r => r.id),
+            usedReplacements: (usedReplacementsByIndex[i] || []).map(r => r.id),
           };
         }
     }
