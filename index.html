@@ -166,6 +166,8 @@ function containsHexWord(word) {
     return [""]
 }
 
+
+
 const E_ENTRIES = [
     ["4de", "\"4de\" sounds like 40 if you read it 4-de"],
     ["4dee", "\"4dee\" sounds like 40 if you read it 4-dee"],
@@ -244,6 +246,19 @@ function toSentence(array) {
     }
 
     return output
+}
+
+const diceSpecRegex = /^([0-9]+)d([0-9]+)$/;
+
+function extractDiceSpec(s) {
+    const matches = s.match(diceSpecRegex);
+
+    if (!matches) { return null }
+
+    return {
+        diceCount: parseInt(matches[1], 10),
+        sideCount: parseInt(matches[2], 10),
+    }
 }
 
 const regexpEmojiPresentation = /\p{Emoji_Presentation}/gu;
@@ -431,6 +446,24 @@ function nicenessReasons(n) {
             const [word, wordDetails] = containsHexWord(s)
             if (word) {
                 output.push({numberText: numberDisplay(s, radix), message: "contains a part that looks like a word: \"" + word + "\" which looks like \"" + wordDetails.original + "\" after the follwing replacements were applied: " + wordDetails.usedReplacements.join(", ")})
+            }
+
+            const diceSpec = extractDiceSpec(s);
+
+            if (diceSpec) {
+                output.push({
+                    numberText: numberDisplay(s, radix),
+                    message:
+                        "looks like a dice instruction. Roll "
+                        + diceSpec.diceCount
+                        + " "
+                        + (diceSpec.diceCount === 1 ? "die" : "dice")
+                        + " with "
+                        + diceSpec.sideCount
+                        + " side" 
+                        + (diceSpec.sideCount === 1 ? "" : "s")
+                        + ".",
+                })
             }
         }
 
